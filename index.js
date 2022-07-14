@@ -56,6 +56,20 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+app.post("/api/persons", (request, response) => {
+  const newPerson = request.body;
+
+  if (!newPerson.name || !newPerson.number) {
+    return response.status(400).json({ error: "Name and number are required" });
+  }
+
+  newPerson.id = Math.floor(Math.random() * 1000000);
+
+  persons = persons.concat(newPerson);
+
+  response.json(newPerson);
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
