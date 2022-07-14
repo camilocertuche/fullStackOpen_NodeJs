@@ -56,11 +56,32 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+const buildError = (error) => {
+  return { error };
+};
+
+const getPersonByIndex = (index, value) => {
+  const person = persons.find(
+    (person) => person[index].toLowerCase() === value.toLowerCase()
+  );
+  return person;
+};
+
 app.post("/api/persons", (request, response) => {
   const newPerson = request.body;
 
   if (!newPerson.name || !newPerson.number) {
-    return response.status(400).json({ error: "Name and number are required" });
+    return response
+      .status(400)
+      .json(buildError("Name and number are required"));
+  }
+
+  if (getPersonByIndex("name", newPerson.name)) {
+    return response.status(400).json(buildError("name must be unique"));
+  }
+
+  if (getPersonByIndex("number", newPerson.number)) {
+    return response.status(400).json(buildError("number must be unique"));
   }
 
   newPerson.id = Math.floor(Math.random() * 1000000);
