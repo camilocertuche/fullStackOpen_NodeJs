@@ -58,27 +58,19 @@ const getPersonByIndex = (index, value) => {
 };
 
 app.post("/api/persons", (request, response) => {
-  const newPerson = request.body;
+  const { name, number } = request.body;
 
-  if (!newPerson.name || !newPerson.number) {
+  if (!name || !number) {
     return response
       .status(400)
       .json(buildError("Name and number are required"));
   }
 
-  if (getPersonByIndex("name", newPerson.name)) {
-    return response.status(400).json(buildError("name must be unique"));
-  }
+  const person = new Person({ name, number });
 
-  if (getPersonByIndex("number", newPerson.number)) {
-    return response.status(400).json(buildError("number must be unique"));
-  }
-
-  newPerson.id = Math.floor(Math.random() * 1000000);
-
-  persons = persons.concat(newPerson);
-
-  response.json(newPerson);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 const PORT = process.env.PORT || 3001;
