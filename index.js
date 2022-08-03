@@ -14,6 +14,10 @@ app.use(express.static("build"));
 app.use(morgan(":method :url :status :response-time ms :body"));
 app.use(cors());
 
+const buildError = (error) => {
+  return { error };
+};
+
 app.get("/api/persons", (request, response, next) => {
   Person.find({})
     .then((persons) => {
@@ -48,9 +52,20 @@ app.delete("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-const buildError = (error) => {
-  return { error };
-};
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
 
 app.post("/api/persons", (request, response, next) => {
   const { name, number } = request.body;
@@ -61,12 +76,16 @@ app.post("/api/persons", (request, response, next) => {
       .json(buildError("Name and number are required"));
   }
 
-  const person = new Person({ name, number });
+  return Person.findOne({ name })
+    .then((person) => {
+      if (person) {
+        return response.status(400).json(buildError("Person already exists"));
+      }
 
-  person
-    .save()
-    .then((savedPerson) => {
-      response.json(savedPerson);
+      const newPerson = new Person({ name, number });
+      newPerson.save().then((savedPerson) => {
+        response.json(savedPerson);
+      });
     })
     .catch((error) => next(error));
 });
