@@ -59,14 +59,13 @@ app.delete("/api/persons/:id", (request, response, next) => {
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
-  const body = request.body;
+  const { name, number } = request.body;
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
-
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then((updatedPerson) => {
       response.json(updatedPerson);
     })
@@ -76,12 +75,6 @@ app.put("/api/persons/:id", (request, response, next) => {
 app.post("/api/persons", (request, response, next) => {
   const { name, number } = request.body;
 
-  if (!name || !number) {
-    return response
-      .status(400)
-      .json(buildError("Name and number are required"));
-  }
-
   return Person.findOne({ name })
     .then((person) => {
       if (person) {
@@ -89,9 +82,12 @@ app.post("/api/persons", (request, response, next) => {
       }
 
       const newPerson = new Person({ name, number });
-      newPerson.save().then((savedPerson) => {
-        response.json(savedPerson);
-      });
+      newPerson
+        .save()
+        .then((savedPerson) => {
+          response.json(savedPerson);
+        })
+        .catch((error) => next(error));
     })
     .catch((error) => next(error));
 });
@@ -101,6 +97,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send(buildError("Malforamatted id"));
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json(buildError(error.message));
   }
 
   next(error);
