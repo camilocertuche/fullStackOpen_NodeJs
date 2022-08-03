@@ -14,10 +14,12 @@ app.use(express.static("build"));
 app.use(morgan(":method :url :status :response-time ms :body"));
 app.use(cors());
 
-app.get("/api/persons", (request, response) => {
-  Person.find({}).then((persons) => {
-    response.json(persons);
-  });
+app.get("/api/persons", (request, response, next) => {
+  Person.find({})
+    .then((persons) => {
+      response.json(persons);
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/info", (request, response) => {
@@ -50,14 +52,7 @@ const buildError = (error) => {
   return { error };
 };
 
-const getPersonByIndex = (index, value) => {
-  const person = persons.find(
-    (person) => person[index].toLowerCase() === value.toLowerCase()
-  );
-  return person;
-};
-
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const { name, number } = request.body;
 
   if (!name || !number) {
@@ -68,9 +63,12 @@ app.post("/api/persons", (request, response) => {
 
   const person = new Person({ name, number });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 const errorHandler = (error, request, response, next) => {
