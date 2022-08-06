@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/camilocertuche/fullStackOpen_NodeJs#readme",
   "devDependencies": {
+    "eslint": "^8.21.0",
     "nodemon": "^2.0.19",
     "shx": "^0.3.4"
   },
